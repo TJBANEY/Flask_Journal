@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, make_response
+from flask import Flask, render_template, redirect, url_for, make_response, request
 from models import *
 
 import json
@@ -41,8 +41,38 @@ def list_view():
 def detail_view():
 	pass
 
-@app.route('/entry')
+@app.route('/entry', methods=['POST', 'GET'])
 def edit_view():
-	pass
+	if request.method == 'POST':
+		if 'title' in request.POST:
+			title = request.POST['title']
+		else:
+			title = None
+
+		if 'date' in request.POST:
+			date = request.POST['date']
+		else:
+			date = None
+
+		if 'timeSpent' in request.POST:
+			time = request.POST['timeSpent']
+		else:
+			time = None
+
+		if 'whatILearned' in request.POST:
+			learned = request.POST['whatILearned']
+		else:
+			learned = None
+
+		if 'resourcesToRemember' in request.POST:
+			resources = request.POST['resourcesToRemember']
+		else:
+			resources = None
+
+		Entry.create(title=title, date=date, time_spent=time, resources=resources, learned=learned)
+
+		return redirect(url_for('index'))
+	else:
+		return render_template('new.html')
 
 app.run(debug=True, port=8000, host='0.0.0.0')
