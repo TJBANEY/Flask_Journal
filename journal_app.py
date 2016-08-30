@@ -4,6 +4,7 @@ from models import *
 import json
 
 app = Flask(__name__)
+app._static_folder = "./static/"
 
 @app.route('/')
 @app.route('/<name>')
@@ -37,42 +38,45 @@ def list_view():
 
 	return render_template('index.html', **context)
 
-@app.route('/details')
-def detail_view():
-	pass
+@app.route('/details/<id>')
+def detail_view(id):
+	entry = Entry.select().where(Entry.id == id).get()
+	context = {'entry': entry}
+
+	return render_template('detail.html', **context)
 
 @app.route('/entry', methods=['POST', 'GET'])
-def edit_view():
+@app.route('/entry/<id>', methods=['POST', 'GET'])
+def edit_view(id):
 	if request.method == 'POST':
-		if 'title' in request.POST:
-			title = request.POST['title']
-		else:
-			title = None
+		if not id:
+			title = request.form.get('title')
+			date = request.form.get('date')
+			time = request.form.get('timeSpent')
+			learned = request.form.get('whatILearned')
+			resources = request.form.get('resourcesToRemember')
 
-		if 'date' in request.POST:
-			date = request.POST['date']
-		else:
-			date = None
+			Entry.create(title=title, date=date, time_spent=time, 
+						resources=resources, learned=learned)
 
-		if 'timeSpent' in request.POST:
-			time = request.POST['timeSpent']
 		else:
-			time = None
+			entry = Entry.select().where(Entry.id == id).get()
 
-		if 'whatILearned' in request.POST:
-			learned = request.POST['whatILearned']
-		else:
-			learned = None
-
-		if 'resourcesToRemember' in request.POST:
-			resources = request.POST['resourcesToRemember']
-		else:
-			resources = None
-
-		Entry.create(title=title, date=date, time_spent=time, resources=resources, learned=learned)
+			entry.title = request.form.get('title')
+			entry.date = request.form.get('date')
+			entry.time = request.form.get('timeSpent')
+			entry.learned = request.form.get('WhatILearned')
+			entry.resources = request.form.get('resourcesToRemember')
 
 		return redirect(url_for('index'))
 	else:
-		return render_template('new.html')
+		if not id:
+			return render_template('new.html')
+		else: 
+			entry = Entry.select().where(Entry.id == id).get()
+
+			context = {'entry': entry}
+
+			return render_template('new.html', **context)
 
 app.run(debug=True, port=8000, host='0.0.0.0')
